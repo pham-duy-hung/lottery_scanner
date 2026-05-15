@@ -3,6 +3,8 @@ import 'package:intl/intl.dart';
 import 'package:lottery_scanner/ui/l10n/app_strings.dart';
 import 'package:lottery_scanner/ui/models/scan_session.dart';
 import 'package:lottery_scanner/ui/screens/camera_screen.dart';
+import 'package:lottery_scanner/ui/screens/draw_results_screen.dart';
+import 'package:lottery_scanner/ui/widgets/locale_fade.dart';
 import 'package:lottery_scanner/ui/theme/app_theme.dart';
 import 'package:lottery_scanner/ui/widgets/language_switcher.dart';
 import 'package:lottery_scanner/ui/widgets/lottery_card.dart';
@@ -46,6 +48,18 @@ class _HomeScreenState extends State<HomeScreen> {
       helpText: s.drawDate,
     );
     if (picked != null) setState(() => _date = picked);
+  }
+
+  void _openDrawResults() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => DrawResultsScreen(
+          region: _region,
+          date: _date,
+          province: _province,
+        ),
+      ),
+    );
   }
 
   void _openCamera() {
@@ -115,6 +129,10 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
+                LocaleFade(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
                 Text(
                   s.appTagline,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -169,9 +187,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   label: s.viewResults,
                   icon: Icons.list_alt,
                   outlined: true,
-                  onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(s.comingSoon(s.viewResults))),
-                  ),
+                  onPressed: _openDrawResults,
                 ),
                 const SizedBox(height: 32),
                 _Step(icon: Icons.camera_alt_outlined, title: s.stepScan, subtitle: s.stepScanDesc),
@@ -179,6 +195,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 _Step(icon: Icons.cloud_download_outlined, title: s.stepFetch, subtitle: s.stepFetchDesc),
                 const SizedBox(height: 12),
                 _Step(icon: Icons.emoji_events_outlined, title: s.stepMatch, subtitle: s.stepMatchDesc),
+                    ],
+                  ),
+                ),
               ]),
             ),
           ),

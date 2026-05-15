@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:lottery_scanner/ui/data/lottery_results_repository.dart';
 import 'package:lottery_scanner/ui/l10n/app_strings.dart';
+import 'package:lottery_scanner/ui/models/lottery_draw.dart';
 import 'package:lottery_scanner/ui/models/scan_session.dart';
 import 'package:lottery_scanner/ui/screens/camera_screen.dart';
 import 'package:lottery_scanner/ui/screens/home_screen.dart';
 import 'package:lottery_scanner/ui/theme/app_theme.dart';
 import 'package:lottery_scanner/ui/widgets/language_switcher.dart';
+import 'package:lottery_scanner/ui/widgets/locale_fade.dart';
 import 'package:lottery_scanner/ui/widgets/lottery_card.dart';
 import 'package:lottery_scanner/ui/widgets/primary_button.dart';
+import 'package:lottery_scanner/ui/widgets/province_results_list.dart';
 
 class ResultScreen extends StatelessWidget {
   const ResultScreen({super.key, required this.session});
@@ -21,7 +25,21 @@ class ResultScreen extends StatelessWidget {
     final location = session.locationLabel(region);
     final date = DateFormat('dd/MM/yyyy').format(session.date);
     final number = session.scannedNumber ?? '------';
-    final won = session.isWinner;
+
+    final dayResults = LotteryResultsRepository.fetchDayResults(
+      region: session.region,
+      date: session.date,
+      strings: s,
+    );
+    final matches = number != '------'
+        ? LotteryResultsRepository.matchTicket(
+            ticketNumber: number,
+            results: dayResults,
+            strings: s,
+          )
+        : <PrizeMatch>[];
+    final won = matches.isNotEmpty;
+    final best = won ? _bestMatch(matches) : null;
 
     return Scaffold(
       appBar: AppBar(
@@ -34,98 +52,158 @@ class ResultScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            _Banner(won: won, s: s),
-            const SizedBox(height: 24),
-            LotteryCard(
-              child: Column(
-                children: [
-                  Text(location, style: const TextStyle(color: AppColors.textSecondary)),
-                  const SizedBox(height: 4),
-                  Text(date, style: const TextStyle(fontWeight: FontWeight.w500)),
-                  const SizedBox(height: 20),
-                  Text(s.yourNumber, style: const TextStyle(color: AppColors.textSecondary, fontSize: 14)),
-                  const SizedBox(height: 12),
-                  _Digits(number: number),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            if (won)
+      body: LocaleFade(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              _Banner(won: won, s: s),
+              const SizedBox(height: 24),
               LotteryCard(
-                child: Row(
+                child: Column(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppColors.accent.withValues(alpha: 0.4),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: const Icon(Icons.emoji_events, color: AppColors.primaryDark, size: 36),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            session.prizeName ?? s.prize,
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            session.prizeAmount ?? '',
-                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.success),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              )
-            else
-              LotteryCard(
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppColors.lose.withValues(alpha: 0.12),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.sentiment_neutral, color: AppColors.lose, size: 32),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Text(s.goodLuck, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
-                    ),
+                    Text(location, style: const TextStyle(color: AppColors.textSecondary)),
+                    const SizedBox(height: 4),
+                    Text(date, style: const TextStyle(fontWeight: FontWeight.w500)),
+                    const SizedBox(height: 20),
+                    Text(s.yourNumber, style: const TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+                    const SizedBox(height: 12),
+                    _Digits(number: number),
                   ],
                 ),
               ),
-            const SizedBox(height: 32),
-            PrimaryButton(
-              label: s.scanAnother,
-              icon: Icons.document_scanner,
-              onPressed: () => Navigator.of(context).pushReplacement(
-                MaterialPageRoute<void>(builder: (_) => CameraScreen(session: session)),
+              const SizedBox(height: 20),
+              if (won && best != null)
+                LotteryCard(
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.accent.withValues(alpha: 0.4),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: const Icon(Icons.emoji_events, color: AppColors.primaryDark, size: 36),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${best.prizeLabel} · ${best.province}',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                            if (best.amount != null) ...[
+                              const SizedBox(height: 6),
+                              Text(
+                                best.amount!,
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.success,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                LotteryCard(
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.lose.withValues(alpha: 0.12),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.sentiment_neutral, color: AppColors.lose, size: 32),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Text(
+                          s.noMatchAnyProvince,
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              if (won && matches.length > 1) ...[
+                const SizedBox(height: 12),
+                LotteryCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(s.matchedProvinces, style: const TextStyle(fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 8),
+                      ...matches.map(
+                        (m) => Padding(
+                          padding: const EdgeInsets.only(bottom: 6),
+                          child: Text(
+                            '• ${m.province}: ${m.prizeLabel} (${m.winningNumber})',
+                            style: const TextStyle(fontSize: 13),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              const SizedBox(height: 28),
+              ProvinceResultsList(
+                draws: dayResults.draws,
+                matches: matches,
+                highlightProvince: session.province,
               ),
-            ),
-            const SizedBox(height: 12),
-            PrimaryButton(
-              label: s.backHome,
-              outlined: true,
-              onPressed: () => Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute<void>(builder: (_) => const HomeScreen()),
-                (_) => false,
+              const SizedBox(height: 28),
+              PrimaryButton(
+                label: s.scanAnother,
+                icon: Icons.document_scanner,
+                onPressed: () => Navigator.of(context).pushReplacement(
+                  MaterialPageRoute<void>(builder: (_) => CameraScreen(session: session)),
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 12),
+              PrimaryButton(
+                label: s.backHome,
+                outlined: true,
+                onPressed: () => Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute<void>(builder: (_) => const HomeScreen()),
+                  (_) => false,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  PrizeMatch _bestMatch(List<PrizeMatch> matches) {
+    const order = [
+      'giai_db',
+      'giai_1',
+      'giai_2',
+      'giai_3',
+      'giai_4',
+      'giai_5',
+      'giai_6',
+      'giai_7',
+      'giai_8',
+    ];
+    matches.sort(
+      (a, b) => order.indexOf(a.prizeKey).compareTo(order.indexOf(b.prizeKey)),
+    );
+    return matches.first;
   }
 }
 

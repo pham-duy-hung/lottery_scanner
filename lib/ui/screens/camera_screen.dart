@@ -27,15 +27,7 @@ class _CameraScreenState extends State<CameraScreen> {
     setState(() => _processing = false);
 
     const mockNumber = '123456';
-    final winner = mockNumber.endsWith('56');
-    final s = AppStrings.of(context);
-
-    final result = widget.session.copyWith(
-      scannedNumber: mockNumber,
-      isWinner: winner,
-      prizeName: winner ? (s.isVi ? 'Giải Nhất' : 'First Prize') : null,
-      prizeAmount: winner ? (s.isVi ? '10.000.000 đ' : '10,000,000 VND') : null,
-    );
+    final result = widget.session.copyWith(scannedNumber: mockNumber);
 
     Navigator.of(context).pushReplacement(
       MaterialPageRoute<void>(builder: (_) => ResultScreen(session: result)),

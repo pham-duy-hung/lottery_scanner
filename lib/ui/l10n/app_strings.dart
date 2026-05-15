@@ -78,6 +78,34 @@ class AppStrings {
   String get scanAnother => isVi ? 'Quét vé khác' : 'Scan another';
   String get backHome => isVi ? 'Về trang chủ' : 'Back to home';
   String get prize => isVi ? 'Giải thưởng' : 'Prize';
+  String get yourProvince => isVi ? 'Vé của bạn' : 'Your ticket';
+  String get dayResults => isVi ? 'Kết quả xổ số' : 'Draw results';
+  String allProvincesToday(int count) => isVi
+      ? 'Các tỉnh quay trong ngày ($count)'
+      : 'Provinces drawn today ($count)';
+  String get allProvincesHint => isVi
+      ? 'Hiển thị đầy đủ giải của mọi tỉnh đã xổ trong ngày'
+      : 'Full prizes for every province drawn on this date';
+  String wonAtProvince(String p) =>
+      isVi ? 'Trúng tại $p' : 'Won in $p';
+  String get bestMatch => isVi ? 'Giải cao nhất' : 'Best match';
+  String get noMatchAnyProvince => isVi
+      ? 'Không trúng ở tỉnh nào trong ngày'
+      : 'No match in any province today';
+  String get matchedProvinces => isVi ? 'Trúng tại các tỉnh' : 'Won in provinces';
+
+  String prizeLabel(String key) => switch (key) {
+        'giai_db' => isVi ? 'Đặc biệt' : 'Special',
+        'giai_1' => isVi ? 'Giải 1' : 'Prize 1',
+        'giai_2' => isVi ? 'Giải 2' : 'Prize 2',
+        'giai_3' => isVi ? 'Giải 3' : 'Prize 3',
+        'giai_4' => isVi ? 'Giải 4' : 'Prize 4',
+        'giai_5' => isVi ? 'Giải 5' : 'Prize 5',
+        'giai_6' => isVi ? 'Giải 6' : 'Prize 6',
+        'giai_7' => isVi ? 'Giải 7' : 'Prize 7',
+        'giai_8' => isVi ? 'Giải 8' : 'Prize 8',
+        _ => key,
+      };
 }
 
 class AppStringsScope extends InheritedWidget {
