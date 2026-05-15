@@ -1,12 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:lottery_scanner/ui/l10n/app_strings.dart';
 import 'package:lottery_scanner/ui/screens/home_screen.dart';
 import 'package:lottery_scanner/ui/state/locale_state.dart';
 import 'package:lottery_scanner/ui/theme/app_theme.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+      systemNavigationBarColor: Colors.white,
+      systemNavigationBarIconBrightness: Brightness.dark,
+    ),
+  );
   runApp(const LotteryScannerApp());
 }
 
@@ -30,10 +44,18 @@ class LotteryScannerApp extends StatelessWidget {
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
           ],
-          builder: (context, child) => AppStringsScope(
-            strings: AppStrings(localeState.locale),
-            child: child ?? const SizedBox.shrink(),
-          ),
+          builder: (context, child) {
+            final mq = MediaQuery.of(context);
+            return AppStringsScope(
+              strings: AppStrings(localeState.locale),
+              child: MediaQuery(
+                data: mq.copyWith(
+                  textScaler: mq.textScaler.clamp(minScaleFactor: 0.85, maxScaleFactor: 1.15),
+                ),
+                child: child ?? const SizedBox.shrink(),
+              ),
+            );
+          },
           home: const HomeScreen(),
         );
       },

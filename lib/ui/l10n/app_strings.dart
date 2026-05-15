@@ -80,6 +80,14 @@ class AppStrings {
   String get prize => isVi ? 'Giải thưởng' : 'Prize';
   String get yourProvince => isVi ? 'Vé của bạn' : 'Your ticket';
   String get dayResults => isVi ? 'Kết quả xổ số' : 'Draw results';
+  String get loadingResults =>
+      isVi ? 'Đang tải kết quả từ Minh Ngọc...' : 'Loading results from Minh Ngọc...';
+  String get fetchError => isVi ? 'Không tải được kết quả' : 'Could not load results';
+  String get retry => isVi ? 'Thử lại' : 'Retry';
+  String get useSampleData => isVi ? 'Dùng dữ liệu mẫu' : 'Use sample data';
+  String get sourceMinhNgoc => isVi ? 'Nguồn: minhngoc.net.vn' : 'Source: minhngoc.net.vn';
+  String get sourceMock =>
+      isVi ? 'Dữ liệu mẫu (offline)' : 'Sample data (offline)';
   String allProvincesToday(int count) => isVi
       ? 'Các tỉnh quay trong ngày ($count)'
       : 'Provinces drawn today ($count)';

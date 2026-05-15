@@ -1,8 +1,25 @@
+import 'package:lottery_scanner/data/services/lottery_data_service.dart';
 import 'package:lottery_scanner/ui/l10n/app_strings.dart';
 import 'package:lottery_scanner/ui/models/lottery_draw.dart';
 import 'package:lottery_scanner/ui/models/scan_session.dart';
 
-/// Dữ liệu lịch quay & kết quả mẫu — thay bằng scraping/API sau.
+enum LotteryResultsSource { minhNgoc, mock }
+
+class ResolvedDayResults {
+  const ResolvedDayResults({
+    required this.results,
+    required this.source,
+    this.sourceUrl,
+    this.loadError,
+  });
+
+  final RegionDayResults results;
+  final LotteryResultsSource source;
+  final String? sourceUrl;
+  final String? loadError;
+}
+
+/// Lịch quay, kết quả mẫu và fetch từ minhngoc.net.vn.
 class LotteryResultsRepository {
   LotteryResultsRepository._();
 
@@ -25,6 +42,40 @@ class LotteryResultsRepository {
     DateTime.saturday: ['Đà Nẵng', 'Quảng Ngãi', 'Đắk Nông'],
     DateTime.sunday: ['Kon Tum', 'Khánh Hòa', 'Thừa Thiên Huế'],
   };
+
+  static final _dataService = LotteryDataService();
+
+  static Future<ResolvedDayResults> resolveDayResults({
+    required LotteryRegion region,
+    required DateTime date,
+    required AppStrings strings,
+    bool useMockOnly = false,
+  }) async {
+    if (useMockOnly) {
+      return ResolvedDayResults(
+        results: fetchDayResults(region: region, date: date, strings: strings),
+        source: LotteryResultsSource.mock,
+      );
+    }
+
+    try {
+      final fetched = await _dataService.fetchRegionDay(
+        region: region,
+        date: date,
+      );
+      return ResolvedDayResults(
+        results: fetched.data,
+        source: LotteryResultsSource.minhNgoc,
+        sourceUrl: fetched.sourceUrl,
+      );
+    } catch (e) {
+      return ResolvedDayResults(
+        results: fetchDayResults(region: region, date: date, strings: strings),
+        source: LotteryResultsSource.mock,
+        loadError: e.toString(),
+      );
+    }
+  }
 
   static RegionDayResults fetchDayResults({
     required LotteryRegion region,
