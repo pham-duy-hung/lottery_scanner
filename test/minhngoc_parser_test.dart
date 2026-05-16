@@ -1,29 +1,38 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lottery_scanner/data/services/minhngoc_html_parser.dart';
 import 'package:lottery_scanner/ui/models/scan_session.dart';
 
 void main() {
-  test('parse Miền Nam block with three provinces', () {
-    const html = '''
-KẾT QUẢ XỔ SỐ Miền Nam
-15/05/2026
-<a href="https://www.minhngoc.net.vn/xo-so-mien-nam/vinh-long.html">Vĩnh Long</a>
-39 371 1995 7830 5033 7433 67708 94928 41243 75585 05343 91528 40795 38479 18924 02531 55107 660519
-<a href="https://www.minhngoc.net.vn/xo-so-mien-nam/binh-duong.html">Bình Dương</a>
-49 256 0425 9452 2233 7639 20490 77179 06596 97690 73992 39322 12345 67890 11111 22222 333333
-''';
+  test('parse Miền Bắc from saved HTML sample', () {
+    final file = File('tool/mb_sample.html');
+    if (!file.existsSync()) return;
 
     final result = MinhNgocHtmlParser.parseRegionDay(
-      html,
+      file.readAsStringSync(),
+      LotteryRegion.mienBac,
+      DateTime(2026, 5, 15),
+    );
+
+    expect(result, isNotNull);
+    expect(result!.draws.single.prizes.first.key, 'giai_db');
+    expect(result.draws.single.prizes.first.numbers, ['67294']);
+  });
+
+  test('parse Miền Nam from saved HTML sample', () {
+    final file = File('tool/mn_sample.html');
+    if (!file.existsSync()) return;
+
+    final result = MinhNgocHtmlParser.parseRegionDay(
+      file.readAsStringSync(),
       LotteryRegion.mienNam,
       DateTime(2026, 5, 15),
     );
 
     expect(result, isNotNull);
-    expect(result!.draws.length, greaterThanOrEqualTo(2));
-    expect(result.draws.first.province, contains('Vĩnh'));
-    final db = result.draws.first.prizes.last;
-    expect(db.key, 'giai_db');
-    expect(db.numbers.first.length, greaterThanOrEqualTo(5));
+    expect(result!.draws.length, 3);
+    final vinhLong = result.draws.firstWhere((d) => d.province.contains('Vĩnh'));
+    expect(vinhLong.prizes.last.numbers, ['216215']);
   });
 }
